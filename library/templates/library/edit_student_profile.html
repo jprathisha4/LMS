@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>📚 Your Book Orders</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+</head>
+<style>
+    /* Edit Profile Form Styling */
+.edit-profile-container {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  max-width: 600px;
+  margin: 50px auto;
+}
+
+.edit-profile-container h3 {
+  text-align: center;
+  font-weight: 600;
+  margin-bottom: 30px;
+  color: #2c3e50;
+}
+
+.edit-profile-container .form-group label {
+  font-weight: 500;
+  color: #34495e;
+}
+
+.edit-profile-container input,
+.edit-profile-container select,
+.edit-profile-container textarea {
+  border-radius: 6px;
+  border: 1px solid #dcdde1;
+  box-shadow: none;
+  padding: 10px 12px;
+  font-size: 15px;
+  transition: 0.3s ease;
+}
+
+.edit-profile-container input:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 0.15rem rgba(0, 123, 255, 0.2);
+}
+
+.edit-profile-container .btn {
+  padding: 10px 20px;
+  font-weight: 500;
+  border-radius: 6px;
+  margin-right: 10px;
+}
+
+.edit-profile-container .btn-success {
+  background-color: #28a745;
+  border: none;
+}
+
+.edit-profile-container .btn-success:hover {
+  background-color: #218838;
+}
+
+.edit-profile-container .btn-secondary {
+  background-color: #6c757d;
+  border: none;
+}
+
+.edit-profile-container .btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+</style>
+<body>
+  {% include "library/navbar.html" %}
+
+
+  <div class="container edit-profile-container">
+  <h3>✏️ Edit Your Profile</h3>
+
+  {% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label>Username</label>
+      {{ user_form.username }}
+      {% for error in user_form.username.errors %}
+        <div class="text-danger small">{{ error }}</div>
+      {% endfor %}
+    </div>
+    <!--user nonform error-->
+    {{ user_form.non_field_errors }}
+    <div class="form-group">
+      {{ user_form.first_name.label_tag }} {{ user_form.first_name }}
+      {% for error in user_form.first_name.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      {{ user_form.email }}
+      {% for error in user_form.email.errors %}
+        <div class="text-danger small">{{ error }}</div>
+      {% endfor %}
+    </div>
+    <div class="form-group">
+      <label>Mobile Number</label>
+      {{ extra_form.mobile_number }}
+      {% for error in extra_form.mobile_number.errors %}
+        <div class="text-danger small">{{ error }}</div>
+      {% endfor %}
+    </div>
+     <div class="form-group">
+        <label>Department</label>
+        {{ extra_form.department }}
+        {% for error in extra_form.department.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="form-group">
+        <label>Year</label>
+        {{ extra_form.year }}
+        {% for error in extra_form.year.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="form-group">
+        <label>Roll Number</label>
+        {{ extra_form.roll_number }}
+        {% for error in extra_form.roll_number.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+      </div>
+      
+    <div class="text-center mt-4">
+      <button type="submit" class="btn btn-success">💾 Save Changes</button>
+      <a href="{% url 'student_issued_books' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+
+{% include "library/footer.html" %}
+</body>
+</html>

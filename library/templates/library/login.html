@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Login | Book yard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap & Font Awesome -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <style>
+        body {
+            background: url('{% static "images/librarybg3.jpg" %}') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        .login-container {
+            margin-top: 100px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border-radius: 12px;
+        }
+
+        .card-title {
+            font-weight: 700;
+        }
+
+        .form-control {
+            border-radius: 8px;
+        }
+
+        .btn-login {
+            border-radius: 20px;
+            background-color: #343a40;
+            color: white;
+        }
+
+        .btn-login:hover {
+            background-color: #23272b;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        {% comment %} .field-icon {
+            position: absolute;
+            top: 100%;   /* adjust for vertical alignment */
+            right: 15px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+            font-size: 1rem; 
+        } {% endcomment %}
+        .field-icon {
+            position: absolute;
+            top: 50%;                
+            right: 15px;             
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+            font-size: 1rem;
+        }
+
+
+    </style>
+</head>
+<body>
+
+<!-- Include shared navbar -->
+ 
+{% include "library/navbar.html" %}
+
+<div class="container login-container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card p-4">
+                <h3 class="card-title text-center mb-4">🔐 Admin Login</h3>
+
+                {% if error %}
+                    <div class="alert alert-danger text-center">{{ error }}</div>
+                {% endif %}
+
+                <form method="POST" autocomplete="off">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="username">👤 Username</label>
+                        <input type="text" name="username" id="username" class="form-control" placeholder="Enter your username" required>
+                    </div>
+                    {% comment %} <div class="form-group position-relative">
+                        <label for="password">🔒 Password</label>
+                        <input type="password" name="password" id="password" class="form-control" placeholder="Enter your password" required>
+                         <span toggle="#password" class="fa fa-fw fa-eye field-icon toggle-password" style="position: absolute; top: 38px; right: 15px; cursor: pointer;"></span>
+                    </div> {% endcomment %}
+                    <div class="form-group">
+                        <label for="password">🔒 Password</label>
+                        <div class="position-relative">
+                            <input type="password" name="password" id="password" 
+                                   class="form-control" placeholder="Enter your password" required>
+                            <span toggle="#password" 
+                                  class="fa fa-fw fa-eye field-icon toggle-password"></span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-login btn-block">Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const togglePassword = document.querySelector('.toggle-password');
+    const passwordInput = document.querySelector('#password');
+
+    togglePassword.addEventListener('click', function () {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      this.classList.toggle('fa-eye');
+      this.classList.toggle('fa-eye-slash');
+    });
+  });
+</script>
+
+</body>
+</html>

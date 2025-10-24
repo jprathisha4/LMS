@@ -1,0 +1,298 @@
+{% comment %} 
+
+{% load static %}
+{% load widget_tweaks %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Student Account</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: url("{% static 'images/librarybg2.jpg' %}") no-repeat center center fixed;
+      background-size: cover;
+    }
+    .signup-box {
+      margin-top: 80px;
+      background: rgba(255,255,255,0.95);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    .password-toggle {
+      cursor: pointer;
+      position: absolute;
+      right: 15px;
+      top: 70%;
+      transform: translateY(-50%);
+    }
+  </style>
+</head>
+<body>
+  {% include "library/navbar.html" %}
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6 signup-box">
+        <h3 class="text-center mb-4">📝 Create Student Account</h3>
+
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        {% if form.errors %}
+          <div class="alert alert-danger">
+            <ul class="mb-0">
+              {% for field in form %}
+                {% for error in field.errors %}
+                  <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                {% endfor %}
+              {% endfor %}
+              {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <form method="POST" novalidate id="studentSignupForm">
+          {% csrf_token %}
+
+          {{ form.username.label_tag }} {{ form.username|add_class:"form-control mb-3" }}
+          {{ form.email.label_tag }} {{ form.email|add_class:"form-control mb-3" }}
+          {{ form.mobile_number.label_tag }} {{ form.mobile_number|add_class:"form-control mb-3" }}
+          {{ form.roll_number.label_tag }} {{ form.roll_number|add_class:"form-control mb-3" }}
+
+          <!-- Course -->
+          {{ form.course.label_tag }}
+          {{ form.course|add_class:"form-select mb-3"|attr:"id:id_course" }}
+
+          <!-- Department -->
+          {{ form.department.label_tag }}
+          {{ form.department|add_class:"form-select mb-3"|attr:"id:id_department" }}
+
+          {{ form.year.label_tag }} {{ form.year|add_class:"form-select mb-3" }}
+
+          <!-- Passwords -->
+          {{ form.password1.label_tag }} {{ form.password1|add_class:"form-control mb-3"|attr:"id:password1" }}
+          <span class="password-toggle" onclick="togglePassword('password1', this)">👁</span>
+
+          {{ form.password2.label_tag }} {{ form.password2|add_class:"form-control mb-3"|attr:"id:password2" }}
+          <span class="password-toggle" onclick="togglePassword('password2', this)">👁</span>
+
+          <button type="submit" class="btn btn-primary w-100">Create Account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  // Toggle password visibility
+  function togglePassword(fieldId, el) {
+    var input = document.getElementById(fieldId);
+    if (input.type === "password") {
+      input.type = "text";
+      el.textContent = "🙈";
+    } else {
+      input.type = "password";
+      el.textContent = "👁";
+    }
+  }
+
+  // Dependent dropdown
+  const departmentMap = {{ department_map_json|safe }};
+  const courseSelect = document.getElementById("id_course");
+  const departmentSelect = document.getElementById("id_department");
+
+  function populateDepartments(courseId) {
+      departmentSelect.innerHTML = '<option value="">Select Department</option>';
+      if (courseId && departmentMap[courseId]) {
+          departmentMap[courseId].forEach(function(dept) {
+              const option = document.createElement("option");
+              option.value = dept.id;
+              option.text = dept.name;
+              departmentSelect.appendChild(option);
+          });
+      }
+  }
+
+  // Populate departments on page load if a course is pre-selected
+  populateDepartments(courseSelect.value);
+
+  // Update departments when course changes
+  courseSelect.addEventListener("change", function() {
+      populateDepartments(this.value);
+  });
+
+  // Prevent form submission if course selected but department empty
+  const form = document.getElementById("studentSignupForm");
+  form.addEventListener("submit", function(e) {
+      if (courseSelect.value && !departmentSelect.value) {
+          e.preventDefault();
+          alert("Please select a department for the chosen course.");
+      }
+  });
+</script>
+</body>
+</html> {% endcomment %}
+
+
+{% load static %}
+{% load widget_tweaks %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Student Account</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet"> <!-- Bootstrap Icons -->
+  <style>
+    body {
+      background: url("{% static 'images/librarybg2.jpg' %}") no-repeat center center fixed;
+      background-size: cover;
+    }
+    .signup-box {
+      margin-top: 80px;
+      background: rgba(255,255,255,0.95);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+  {% include "library/navbar.html" %}
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6 signup-box">
+        <h3 class="text-center mb-4">📝 Create Student Account</h3>
+
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        {% if form.errors %}
+          <div class="alert alert-danger">
+            <ul class="mb-0">
+              {% for field in form %}
+                {% for error in field.errors %}
+                  <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                {% endfor %}
+              {% endfor %}
+              {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <form method="POST" novalidate id="studentSignupForm">
+          {% csrf_token %}
+
+          {{ form.username.label_tag }} {{ form.username|add_class:"form-control mb-3" }}
+          {{ form.email.label_tag }} {{ form.email|add_class:"form-control mb-3" }}
+          {{ form.mobile_number.label_tag }} {{ form.mobile_number|add_class:"form-control mb-3" }}
+          {{ form.roll_number.label_tag }} {{ form.roll_number|add_class:"form-control mb-3" }}
+
+          <!-- Course -->
+          {{ form.course.label_tag }}
+          {{ form.course|add_class:"form-select mb-3"|attr:"id:id_course" }}
+
+          <!-- Department -->
+          {{ form.department.label_tag }}
+          {{ form.department|add_class:"form-select mb-3"|attr:"id:id_department" }}
+
+          {{ form.year.label_tag }} {{ form.year|add_class:"form-select mb-3" }}
+
+          <!-- Password 1 -->
+          <div class="mb-3">
+            {{ form.password1.label_tag }}
+            <div class="input-group">
+              {{ form.password1|add_class:"form-control"|attr:"id:password1" }}
+              <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password1', this)">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Password 2 -->
+          <div class="mb-3">
+            {{ form.password2.label_tag }}
+            <div class="input-group">
+              {{ form.password2|add_class:"form-control"|attr:"id:password2" }}
+              <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password2', this)">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100">Create Account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  // Toggle password visibility
+  function togglePassword(fieldId, el) {
+    var input = document.getElementById(fieldId);
+    var icon = el.querySelector("i");
+    if (input.type === "password") {
+      input.type = "text";
+      icon.classList.remove("bi-eye");
+      icon.classList.add("bi-eye-slash");
+    } else {
+      input.type = "password";
+      icon.classList.remove("bi-eye-slash");
+      icon.classList.add("bi-eye");
+    }
+  }
+
+  // Dependent dropdown
+  const departmentMap = {{ department_map_json|safe }};
+  const courseSelect = document.getElementById("id_course");
+  const departmentSelect = document.getElementById("id_department");
+
+  function populateDepartments(courseId) {
+      departmentSelect.innerHTML = '<option value="">Select Department</option>';
+      if (courseId && departmentMap[courseId]) {
+          departmentMap[courseId].forEach(function(dept) {
+              const option = document.createElement("option");
+              option.value = dept.id;
+              option.text = dept.name;
+              departmentSelect.appendChild(option);
+          });
+      }
+  }
+
+  // Populate departments on page load if a course is pre-selected
+  populateDepartments(courseSelect.value);
+
+  // Update departments when course changes
+  courseSelect.addEventListener("change", function() {
+      populateDepartments(this.value);
+  });
+
+  // Prevent form submission if course selected but department empty
+  const form = document.getElementById("studentSignupForm");
+  form.addEventListener("submit", function(e) {
+      if (courseSelect.value && !departmentSelect.value) {
+          e.preventDefault();
+          alert("Please select a department for the chosen course.");
+      }
+  });
+</script>
+</body>
+</html>

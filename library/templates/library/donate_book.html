@@ -1,0 +1,267 @@
+{% comment %} <!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Donate Book</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</head>
+<style>
+     body {
+      background-color: #f0f2f5;
+      padding-top: 80px; /* offset for navbar */
+    }
+    .form-container {
+      background: white;
+      padding: 30px;
+      max-width: 650px;
+      margin: auto;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .form-group label {
+      font-weight: bold;
+    }
+    .form-check {
+      margin-bottom: 15px;
+    }
+</style>
+<body>
+
+{% include "library/navbar.html" %}
+<div class="container my-5">
+  <h3 class="text-center mb-4">📚 Donate a Book</h3>
+
+    <!-- ✅ Show messages here -->
+  {% if messages %}
+    <div class="container mt-3">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="card p-4 shadow-sm">
+    
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="form-group">
+        {{ form.name.label_tag }} {{ form.name }}
+        
+      </div>
+
+      <div class="form-group">
+        {{ form.author.label_tag }} {{ form.author }}
+        
+      </div>
+
+      <div class="form-group">
+        {{ form.genre.label_tag }} {{ form.genre }}
+      </div>
+
+  
+
+      <div class="form-group">
+        {{ form.isbn.label_tag }} {{ form.isbn }}
+      </div>
+
+      <!-- Language dropdown -->
+      <div class="form-group">
+        {{ form.language.label_tag }} 
+        {{ form.language }}
+      </div>
+
+      <div class="form-group">
+        {{ form.description.label_tag }} {{ form.description }}
+      </div>
+
+      <div class="form-group">
+        {{ form.publisher.label_tag }} {{ form.publisher }}
+      </div>
+
+      <div class="form-group">
+        {{ form.quantity.label_tag }} {{ form.quantity }}
+      </div>
+
+      <div class="form-group">
+        {{ form.image.label_tag }} {{ form.image }}
+      </div>
+
+      <!-- Grouping the bestseller, newly published and date -->
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          {{ form.bestseller }} {{ form.bestseller.label_tag }}
+        </div>
+        <div class="form-group col-md-4">
+          {{ form.newly_published }} {{ form.newly_published.label_tag }}
+        </div>
+
+        <div class="form-group col-md-4">
+          {{ form.published_date.label_tag }}
+          {{ form.published_date }}
+        </div>
+      </div>
+
+
+      <button type="submit" class="btn btn-success btn-block mt-3">
+        📤 Donate Book
+      </button>
+    </form>
+  </div>
+</div>
+
+
+</body>
+</html> {% endcomment %}
+
+
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% if edit %}Edit Donated Book{% else %}Donate Book{% endif %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</head>
+<style>
+  body {
+    background-color: #f0f2f5;
+    padding-top: 80px; /* offset for navbar */
+  }
+  .form-container {
+    background: white;
+    padding: 30px;
+    max-width: 650px;
+    margin: auto;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  h2 {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  .form-group label {
+    font-weight: bold;
+  }
+  .form-check {
+    margin-bottom: 15px;
+  }
+</style>
+<body>
+
+{% include "library/navbar.html" %}
+
+<div class="container my-5">
+  <h3 class="text-center mb-4">
+    {% if edit %}✏️ Edit Donated Book{% else %}📚 Donate a Book{% endif %}
+  </h3>
+
+  <!-- ✅ Show messages -->
+  {% if messages %}
+    <div class="container mt-3">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="card p-4 shadow-sm">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      {% if form.errors %}
+        <div class="alert alert-danger">
+          <ul>
+            {% for field, errors in form.errors.items %}
+              <li><strong>{{ field|title }}:</strong> {{ errors|join:", " }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+
+      <div class="form-group">
+        {{ form.name.label_tag }} {{ form.name }}
+      </div>
+
+      <div class="form-group">
+        {{ form.author.label_tag }} {{ form.author }}
+      </div>
+
+      <div class="form-group">
+        {{ form.genre.label_tag }} {{ form.genre }}
+      </div>
+
+      <div class="form-group">
+        {{ form.isbn.label_tag }} {{ form.isbn }}
+      </div>
+
+      <div class="form-group">
+        {{ form.language.label_tag }} {{ form.language }}
+      </div>
+
+      <div class="form-group">
+        {{ form.description.label_tag }} {{ form.description }}
+      </div>
+
+      <div class="form-group">
+        {{ form.publisher.label_tag }} {{ form.publisher }}
+      </div>
+
+      <div class="form-group">
+        {{ form.price.label_tag }} {{ form.price }}
+      </div>
+
+      <div class="form-group">
+        {{ form.quantity.label_tag }} {{ form.quantity }}
+      </div>
+
+      <div class="form-group">
+        {{ form.image.label_tag }} {{ form.image }}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          {{ form.bestseller }} {{ form.bestseller.label_tag }}
+        </div>
+        <div class="form-group col-md-4">
+          {{ form.newly_published }} {{ form.newly_published.label_tag }}
+        </div>
+        <div class="form-group col-md-4">
+          {{ form.published_date.label_tag }} {{ form.published_date }}
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-success btn-block mt-3">
+        {% if edit %}💾 Save Changes{% else %}📤 Donate Book{% endif %}
+      </button>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>

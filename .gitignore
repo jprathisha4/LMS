@@ -1,0 +1,82 @@
+# # Python
+# __pycache__/
+# *.pyc
+
+# # Virtual environment
+# venv/
+# myenv/
+
+# # Django stuff
+# db.sqlite3
+# /staticfiles/
+# /media/
+
+# # Environment file
+# .env
+
+
+# =====================
+# Python
+# =====================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+
+# =====================
+# Virtual environments
+# =====================
+venv/
+myenv/
+env/
+
+# =====================
+# Django stuff
+# =====================
+# Local database
+db.sqlite3
+
+# Collected static files
+/staticfiles/
+
+# Uploaded media files
+/media/
+
+# =====================
+# Environment variables
+# =====================
+.env
+.env.*
+
+# =====================
+# IDE / Editor
+# =====================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# =====================
+# OS files
+# =====================
+.DS_Store
+Thumbs.db
+
+# =====================
+# Logs / Test files
+# =====================
+*.log
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+
+# =====================
+# Misc / Deployment
+# =====================
+*.pot
+*.mo

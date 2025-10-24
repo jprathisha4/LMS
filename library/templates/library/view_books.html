@@ -1,0 +1,251 @@
+
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>View Books</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    body {
+      background: #f2f6fa;
+      padding-top: 70px;
+    }
+
+    .table thead {
+      background-color: #343a40;
+      color: white;
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 0.8rem;
+    }
+
+    .table img {
+      width: 60px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 5px;
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .badge-info {
+      background-color: #17a2b8;
+    }
+
+    .badge-warning {
+      background-color: #ffc107;
+      color: #000;
+    }
+
+    @media (max-width: 576px) {
+      .table th, .table td {
+        font-size: 13px;
+        vertical-align: middle;
+      }
+
+      .table img {
+        width: 50px;
+        height: 70px;
+      }
+
+      .badge {
+        font-size: 11px;
+        padding: 5px 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+{% include "library/navbar.html" %}
+
+<div class="container table-container">
+  <h2 class="mb-4 text-center">📚 All Books in Library</h2>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"></h4>
+     <a href="{% url 'add_book' %}" class="btn btn-warning mx-2">➕ Add Book</a>
+  </div>
+
+     <!-- Global Search -->
+   <form method="get" class="form-inline mb-3 d-flex justify-content-center">
+    
+    <input type="text" name="q" class="form-control w-50 mx-2" placeholder="🔍 Search all books..." value="{{ search_query }}">
+    <button type="submit" class="btn btn-primary me-2">Search</button>
+    <a href="{% url 'view_books' %}" class="btn btn-secondary mx-2">Reset</a>
+    <!-- ✅ Export button -->
+    <a href="?q={{ search_query }}&export=excel" class="btn btn-success">
+      <i class="fa fa-file-excel"></i> Export
+    </a>
+    
+  </form>    
+
+
+   <!-- ✅ Show messages here -->
+  {% if messages %}
+    <div class="container mt-3">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+
+
+
+  <!-- 📕 Regular Books Table -->
+  <div class="table-responsive">
+    <table class="table table-bordered" id="registrationsTable">
+      <thead>
+        <tr>
+          <th>S.No</th>
+          <th>Book ID</th>
+          <th>Image</th>
+          <th>Title</th>
+          <th>Author</th>
+          <th>ISBN</th>
+          <th>Genre</th>
+          <th>Language</th>
+          <th>Publisher</th>
+          <th>Quantity</th>
+          <th>Book Price(₹)</th>
+          <th>Description</th>
+          <th>Published</th>
+          <th>Status</th>
+          <th>QR Code</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for book in books_regular %}
+        <tr>
+         <td>{{ forloop.counter|add:books_regular.start_index|add:"-1" }}</td>
+          <td>{{ book.book_unique_id }}</td>
+          <td>
+            {% if book.image %}
+              <img src="{{ book.image.url }}" alt="Book Image" />
+            {% else %}
+              <img src="{% static 'images/default-book.jpg' %}" alt="Default Image" />
+            {% endif %}
+          </td>
+          <td>{{ book.name }}</td>
+          <td>{{ book.author }}</td>
+          <td>{{ book.isbn }}</td>
+          <td>{{ book.genre.name }}</td>
+          <td>{{ book.language }}</td>
+          <td>{{ book.publisher }}</td>
+          <td>
+            {{ book.quantity }}
+            {% if book.quantity <= 0 %}
+              <br>
+              <span class="badge badge-danger">❌ Missing</span>
+            {% endif %}
+          </td>
+          {% comment %} <td>{{ book.quantity }}</td> {% endcomment %}
+          <td>{{ book.price }}</td>
+          <td>{{ book.description|truncatechars:100 }}</td>
+          <td>{% if book.published_date %}{{ book.published_date|date:"M d, Y" }}{% else %}<em>Not set</em>{% endif %}</td>
+          <td>
+            {% if book.newly_published and book.bestseller %}
+              <span class="badge badge-warning">🆕 New<br>🌟 Bestseller</span>
+            {% elif book.bestseller %}
+              <span class="badge badge-warning">🌟 Bestseller</span>
+            {% elif book.newly_published %}
+              <span class="badge badge-info">🆕 New</span>
+            {% else %}
+              <em>None</em>
+            {% endif %}
+          </td>
+          <td>
+            {% if book.qrcode %}
+              <img src="{{ book.qrcode.url }}" width="80" alt="QR">
+              <a href="{{ book.qrcode.url }}" download class="btn btn-success btn-sm mt-1">⬇️ Download</a>
+            {% else %}
+              <small>No QR</small>
+            {% endif %}
+          </td>
+          <td class="action-buttons">
+            <a href="{% url 'edit_book' book.id %}" class="btn btn-primary btn-sm">✏️ Edit</a>         
+            <a href="{% url 'delete_book' book.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?');">Delete</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    
+
+
+    <!-- Pagination for Regular Books -->
+    <nav aria-label="Regular pagination" class="mt-3">
+      <ul class="pagination justify-content-center">
+        {% if books_regular.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?q={{ search_query }}&regular_page={{ books_regular.previous_page_number }}&donated_page={{ books_donated.number }}">«</a>
+          </li>
+        {% endif %}
+        {% for num in books_regular.paginator.page_range %}
+          <li class="page-item {% if books_regular.number == num %}active{% endif %}">
+            <a class="page-link" href="?q={{ search_query }}&regular_page={{ num }}&donated_page={{ books_donated.number }}">{{ num }}</a>
+          </li>
+        {% endfor %}
+        {% if books_regular.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?q={{ search_query }}&regular_page={{ books_regular.next_page_number }}&donated_page={{ books_donated.number }}">»</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+
+ 
+</div>
+
+<!-- JS -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script>
+  // Client-side live search (without re-numbering rows)
+  function liveSearch(inputId, tableId) {
+    const input = document.getElementById(inputId);
+    const table = document.getElementById(tableId);
+    if (!input || !table) return;
+
+    input.addEventListener("keyup", function () {
+      const filter = input.value.toLowerCase();
+      const rows = table.querySelectorAll("tbody tr");
+
+      rows.forEach((row) => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(filter) ? "" : "none";
+      });
+    });
+  }
+
+  liveSearch("searchRegular", "registrationsTable");
+ 
+
+
+  
+</script>
+
+
+</body>
+</html> 
+

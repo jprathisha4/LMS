@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ book.name }} | Details</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #f2f2f2;
+      padding-top: 60px;
+    }
+
+    .book-detail-image {
+      width: 100%;
+      height: auto;
+      max-height: 500px;
+      object-fit: contain;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+
+    .btn-space {
+      margin: 5px 5px 5px 0;
+      white-space: nowrap;
+    }
+
+    .info-box {
+      background: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width: 767px) {
+      .btn-space {
+        display: block;
+        margin-bottom: 10px;
+        width: 100%;
+      }
+
+      .book-detail-image {
+        max-height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% include 'library/navbar.html' %}
+
+  <div class="container my-4">
+    <div class="row">
+      <!-- Book Image -->
+      <div class="col-md-5 text-center mb-4">
+        {% if book.image %}
+          <img src="{{ book.image.url }}" alt="{{ book.name }}" class="book-detail-image">
+        {% else %}
+          <img src="{% static 'images/default-book.jpg' %}" alt="Default Image" class="book-detail-image">
+        {% endif %}
+      </div>
+
+      <!-- Book Info -->
+      <div class="col-md-7">
+        <div class="info-box">
+          <h3 class="mb-3">{{ book.name }}</h3>
+          <p><strong>Author:</strong> {{ book.author }}</p>
+          <p><strong>Genre:</strong> {{ book.genre }}</p>
+          <p><strong>ISBN:</strong> {{ book.isbn }}</p>
+          <p><strong>Language:</strong> {{ book.language }}</p>
+          <p><strong>Publisher:</strong> {{ book.publisher }}</p>
+          <p><strong>Description:</strong> {{ book.description }}</p>
+          {% comment %} <a href="{% url 'download_book_qr' book.pk %}" class="btn btn-success mt-2 mb-3">⬇️ Download QR</a> {% endcomment %}
+          
+
+          <p><strong>Total Quantity:</strong> {{total_quantity }}</p>
+          <p><strong>Currently Borrowed:</strong> {{ borrowed_count }}</p>
+          <p><strong>Reserved:</strong> {{ reserved_count }}</p>
+        
+          <p><strong>Available to Borrow:</strong>
+    {% if available > 0 %}
+        <span class="text-success">✅ {{ available }} copy(ies) available to borrow.</span>
+    {% elif reserved_count < total_quantity %}
+        <span class="text-warning">⚠️ All copies are borrowed. You can reserve this book.</span>
+    {% else %}
+        <span class="text-danger">❌ All copies are borrowed and reserved. You will be added to the waiting list.</span>
+    {% endif %}
+</p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+
+  {% include "library/footer.html" %}
+  <script>
+    const qrImage = document.getElementById("qrImage");
+    const downloadBtn = document.getElementById("downloadBtn");
+    downloadBtn.href = qrImage.src;
+  </script>
+</body>
+</html>

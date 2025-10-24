@@ -1,0 +1,79 @@
+
+<footer class="text-center text-lg-start bg-dark text-white mt-5 py-3 mt-auto w-100">
+  <section class="container d-flex flex-column flex-md-row justify-content-between align-items-center p-4 border-bottom">
+    <div class="mb-3 mb-md-0">
+      📲 Get connected with us on social networks:
+    </div>
+    <div>
+      <a href="{{ footer.facebook }}" class="me-3 text-reset" target="_blank"><i class="bi bi-facebook"></i></a>
+      <a href="{{ footer.twitter }}" class="me-3 text-reset" target="_blank"><i class="bi bi-twitter-x"></i></a>
+      <a href="{{ footer.google }}" class="me-3 text-reset" target="_blank"><i class="bi bi-google"></i></a>
+      <a href="{{ footer.instagram }}" class="me-3 text-reset" target="_blank"><i class="bi bi-instagram"></i></a>
+      <a href="{{ footer.linkedin }}" class="me-3 text-reset" target="_blank"><i class="bi bi-linkedin"></i></a>
+    </div>
+  </section>
+
+  <section class="py-5">
+    <div class="container text-center text-md-start">
+      <div class="row gy-4">
+        <div class="col-12 col-md-6 col-lg-4 ">
+          {% comment %} <h6 class="text-uppercase fw-bold mb-3">📚 Book Yard</h6> {% endcomment %}
+          <a href="/" class="text-uppercase fw-bold mb-3 footer-logo">
+            {% if library_settings.logo %}
+              <img src="{{ library_settings.logo.url }}" alt="Logo" style="height: 40px; margin-right: 10px;">
+            {% endif %}
+            <span>{{ library_settings.brand_name|default:"Library System" }}</span>
+          </a>
+          {% comment %} <p class="mb-0">&copy; {{ library_settings.brand_name|default:"Library System" }} {{ now|date:"Y" }}. All rights re/served.</p> {% endcomment %}
+  
+          
+          <p>{{ footer.about }}</p>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-4 offset-lg-1">
+          <h6 class="text-uppercase fw-bold mb-3">📞 Contact</h6>
+          <p><i class="fa fa-home me-2"></i> {{ footer.address }}</p>
+          <p><i class="fa fa-envelope me-2"></i> {{ footer.email }}</p>
+          <p><i class="fa fa-phone me-2"></i> {{ footer.phone }}</p>
+          <p><i class="fa fa-clock-o me-2"></i> {{ footer.working_hours }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+   <!-- Copyright -->
+  <div class="text-center p-3 border-top small">
+    &copy; {% now "Y" %} Copyrights designed & developed by — 
+    <a class="text-reset fw-bold" href="https://ascox.in/" target="_blank"><b>Ascox Technosoft Solution Pvt Ltd</b></a>
+  </div>
+</footer>
+
+<style>
+  .footer-logo {
+  font-weight: 700;
+  font-size: 1.1rem;
+  transition: color 0.3s ease;
+  color:white
+}
+
+.footer-logo:hover {
+  color: #f0db4f; /* subtle gold/yellow hover effect */
+}
+
+.footer-logo-img {
+  height: 50px;
+  margin-right: 10px;
+  border-radius: 4px; /* slightly rounded corners for a softer look */
+}
+
+.footer-logo-text {
+  vertical-align: middle;
+}
+
+footer {
+  width: 100%;
+  left: 0;
+  right: 0;
+}
+
+</style>

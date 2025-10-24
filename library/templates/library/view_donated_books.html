@@ -1,0 +1,265 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>View Books</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    body {
+      background: #f2f6fa;
+      padding-top: 70px;
+    }
+
+    .table thead {
+      background-color: #343a40;
+      color: white;
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 0.8rem;
+    }
+
+    .table img {
+      width: 60px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 5px;
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .badge-info {
+      background-color: #17a2b8;
+    }
+
+    .badge-warning {
+      background-color: #ffc107;
+      color: #000;
+    }
+
+    @media (max-width: 576px) {
+      .table th, .table td {
+        font-size: 13px;
+        vertical-align: middle;
+      }
+
+      .table img {
+        width: 50px;
+        height: 70px;
+      }
+
+      .badge {
+        font-size: 11px;
+        padding: 5px 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+{% include "library/navbar.html" %}
+<!-- 🎁 Donated Books Section -->
+<h4 class="text-center mt-5" style="font-size: 2rem;">🎁 Donated Books</h4>
+
+  <div class="card mt-4 shadow-sm border-info my-4">
+  <div class="card-body text-center">
+    <h5 class="card-title">📦 Willing to Donate a Book?</h5>
+    <p class="card-text">Help others by donating your unused books to the library. Your contribution is valuable!</p>
+    <a href="{% url 'donate_book' %}" class="btn btn-outline-primary">Donate a Book</a>
+  </div>
+</div>
+
+  {% if messages %}
+    <div class="container mt-3">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="get" class="form-inline mb-3 d-flex justify-content-center">
+  <input type="text" name="q" 
+         class="form-control w-50 mr-2" 
+         placeholder="🔍 Search donated books..."
+         value="{{ search_query }}">
+  <button type="submit" class="btn btn-primary">Search</button>
+  <a href="{% url 'view_donated_books' %}" class="btn btn-secondary mx-2">Reset</a>
+   <a href="{% url 'export_donated_books' %}?q={{ search_query }}" class="btn btn-success">
+        📥 Export to Excel
+    </a>
+</form>
+
+
+  <div class="table-responsive">
+    <table class="table table-bordered" id="donatedBooksTable">
+      <thead>
+        <tr>
+          <th>S.No</th>
+          <th>Image</th>
+          <th>Title</th>
+          <th>Author</th>
+          <th>ISBN</th>
+          <th>Publisher</th>
+          <th>Price</th>
+          <th>Quantity</th> 
+          <th>Description</th>
+          <th>QR Code</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for book in books_donated %}
+        <tr>
+          {% comment %} <td>{{ forloop.counter|add:books_donated.start_index|add:"-1" }}</td> {% endcomment %}
+          <td>{{ forloop.counter0|add:books_donated.start_index }}</td>
+
+          <td>
+            {% if book.image %}
+              <img src="{{ book.image.url }}" alt="Book Image" />
+            {% else %}
+              <img src="{% static 'images/default-book.jpg' %}" alt="Default Image" />
+            {% endif %}
+          </td>
+          <td>{{ book.name }}</td>
+          <td>{{ book.author }}</td>
+          <td>{{ book.isbn }}</td>
+          <td>{{ book.publisher }}</td>
+          <td>{{ book.price }}</td>
+          <td>{{ book.quantity }}</td>
+          {% comment %} <td>
+            {% if book.donated_by %}
+              <span class="badge badge-warning">{{ book.donated_by.username }}</span>
+            {% else %}<em>Unknown</em>{% endif %}
+          </td> {% endcomment %}
+          <td>{{ book.description|truncatechars:80 }}</td>
+          <td>
+            {% if book.qrcode %}
+              <img src="{{ book.qrcode.url }}" width="80" alt="QR">
+              <a href="{{ book.qrcode.url }}" download class="btn btn-success btn-sm mt-1">⬇️ Download</a>
+            {% else %}
+              <small>No QR</small>
+            {% endif %}
+          </td>
+          <td class="action-buttons">
+           
+            <a href="{% url 'edit_donate_book' book.id %}" class="btn btn-primary btn-sm">✏️ Edit</a>         
+            
+            <a href="{% url 'delete_book' book.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this donated book?');">Delete</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% comment %} <!-- Pagination for Donated Books -->
+    <nav aria-label="Donated pagination" class="mt-3">
+      <ul class="pagination justify-content-center">
+        {% if books_donated.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?q={{ search_query }}&donated_page={{ books_donated.previous_page_number }}&regular_page={{ books_regular.number }}">«</a>
+          </li>
+        {% endif %}
+        {% for num in books_donated.paginator.page_range %}
+          <li class="page-item {% if books_donated.number == num %}active{% endif %}">
+            <a class="page-link" href="?q={{ search_query }}&donated_page={{ num }}&regular_page={{ books_regular.number }}">{{ num }}</a>
+          </li>
+        {% endfor %}
+        {% if books_donated.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?q={{ search_query }}&donated_page={{ books_donated.next_page_number }}&regular_page={{ books_regular.number }}">»</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav> {% endcomment %}
+    <!-- Pagination for Donated Books -->
+    {% if books_donated.has_other_pages %}
+    <nav aria-label="Donated pagination" class="mt-3">
+      <ul class="pagination justify-content-center">
+        <!-- Previous Button -->
+        {% if books_donated.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?q={{ search_query }}&donated_page={{ books_donated.previous_page_number }}">«</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">«</span>
+          </li>
+        {% endif %}
+        
+        <!-- Page Numbers -->
+        {% for num in books_donated.paginator.page_range %}
+          {% if books_donated.number == num %}
+            <li class="page-item active">
+              <span class="page-link">{{ num }}</span>
+            </li>
+          {% else %}
+            <li class="page-item">
+              <a class="page-link" href="?q={{ search_query }}&donated_page={{ num }}">{{ num }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
+          
+        <!-- Next Button -->
+        {% if books_donated.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?q={{ search_query }}&donated_page={{ books_donated.next_page_number }}">»</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">»</span>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+
+  </div>
+</div>
+
+
+<!-- JS -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script>
+  // Client-side live search (without re-numbering rows)
+  function liveSearch(inputId, tableId) {
+    const input = document.getElementById(inputId);
+    const table = document.getElementById(tableId);
+    if (!input || !table) return;
+
+    input.addEventListener("keyup", function () {
+      const filter = input.value.toLowerCase();
+      const rows = table.querySelectorAll("tbody tr");
+
+      rows.forEach((row) => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(filter) ? "" : "none";
+      });
+    });
+  }
+liveSearch("searchDonated", "donatedBooksTable");
+
+
+  
+</script>
+
+
+</body>
+</html> 
+
+

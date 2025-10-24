@@ -1,0 +1,163 @@
+
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .card-link {
+            text-decoration: none;
+            color: inherit;
+        }
+        .dashboard-card {
+            transition: 0.3s;
+        }
+        .dashboard-card:hover {
+            transform: scale(1.02);
+        }
+        @media (min-width: 992px) {
+  body {
+    padding-left: 250px; /* width of your sidebar */
+  }
+}
+
+
+    </style>
+</head>
+<body>
+  {% include "library/navbar.html" %} 
+ <div class="container py-4"> 
+  
+ 
+      <h2 class="text-center mb-4">📊 Admin Dashboard</h2>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+       <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="today-tab" data-bs-toggle="tab" data-bs-target="#today" type="button" role="tab">Today</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="total-tab" data-bs-toggle="tab" data-bs-target="#total" type="button" role="tab">Total</button>
+        </li>
+       
+        
+    </ul>
+
+    <div class="tab-content" id="dashboardTabsContent">
+        <!-- Today Tab -->
+        <div class="tab-pane fade show active" id="today" role="tabpanel">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <a href="{% url 'view_books' %}" class="card-link">
+                        <div class="card dashboard-card shadow-sm border-start border-primary border-4">
+                            <div class="card-body">
+                                <h5 class="card-title">📚 Books Uploaded </h5>
+                                <p class="card-text fs-4">{{ today_books_count }}</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'view_issued_books' %}" class="card-link">
+                        <div class="card dashboard-card shadow-sm border-start border-success border-4">
+                            <div class="card-body">
+                                <h5 class="card-title">📖 Books Issued </h5>
+                                <p class="card-text fs-4">{{ today_issued_count }}</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'view_students' %}" class="card-link">
+                        <div class="card dashboard-card shadow-sm border-start border-warning border-4">
+                            <div class="card-body">
+                                <h5 class="card-title">👤 Students Joined </h5>
+                                <p class="card-text fs-4">{{ today_students_count }}</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Tab -->
+        <div class="tab-pane fade" id="total" role="tabpanel">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <a href="{% url 'view_books' %}" class="card-link">
+                        <div class="card dashboard-card shadow-sm border-start border-primary border-4">
+                            <div class="card-body">
+                                <h5 class="card-title">📚 Total Books</h5>
+                                <p class="card-text fs-4">{{ total_books_count }}</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'view_students' %}" class="card-link">
+                        <div class="card dashboard-card shadow-sm border-start border-info border-4">
+                            <div class="card-body">
+                                <h5 class="card-title">👥 Total Students</h5>
+                                <p class="card-text fs-4">{{ total_students_count }}</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'view_issued_books' %}" class="card-link">
+                        <div class="card dashboard-card shadow-sm border-start border-success border-4">
+                            <div class="card-body">
+                                <h5 class="card-title">📖 Total Issued</h5>
+                                <p class="card-text fs-4">{{ total_issued_count }}</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-4">
+                    <a href="{% url 'view_issued_books' %}" class="card-link">
+                        <div class="card dashboard-card shadow-sm border-start border-warning border-4">
+                            <div class="card-body">
+                                <h5 class="card-title">🕗 Total Reserved</h5>
+                                <p class="card-text fs-4">{{ total_reserved_count }}</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-4">
+                    <a href="{% url 'view_issued_books' %}" class="card-link">
+                        <div class="card dashboard-card shadow-sm border-start border-danger border-4">
+                            <div class="card-body">
+                                <h5 class="card-title">⏳ Total Waiting</h5>
+                                <p class="card-text fs-4">{{ total_waiting_count }}</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-4">
+                    <a href="{% url 'view_issued_books' %}" class="card-link">
+                        <div class="card dashboard-card shadow-sm border-start border-secondary border-4">
+                            <div class="card-body">
+                                <h5 class="card-title">✅ Total Returned</h5>
+                                <p class="card-text fs-4">{{ total_returned_count }}</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

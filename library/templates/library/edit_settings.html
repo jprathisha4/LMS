@@ -1,0 +1,115 @@
+
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Library Settings</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .card-header {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .form-control, .input-group-text {
+            border-radius: 0.5rem;
+        }
+        .card {
+            border-radius: 1rem;
+        }
+    </style>
+</head>
+<body>
+    {% include "library/navbar.html" %}
+
+    <div class="container my-5">
+        <h2 class="text-center mb-5">Library Settings</h2>
+
+        <!-- Flash Messages -->
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        <div class="row g-4">
+
+            <!-- Branding Section -->
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header">Brand & Logo</div>
+                    <div class="card-body">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {{ branding_form.as_p }}
+                            <div class="d-grid mt-3">
+                                <button type="submit" name="save_branding" class="btn btn-primary">Save Branding</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expiry & Fine Section -->
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header">Expiry & Fine Settings</div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            {{ expiry_form.as_p }}
+                            <div class="d-grid mt-3">
+                                <button type="submit" name="save_expiry_fine" class="btn btn-primary">Save Expiry & Fine</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Credentials Section -->
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header">Change Admin Credentials</div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                {{ credential_form.username.label_tag }}
+                                {{ credential_form.username }}
+                            </div>
+
+                            <div class="mb-3 input-group">
+                                {{ credential_form.password.label_tag }}
+                                {{ credential_form.password }}
+                                <span class="input-group-text" id="togglePassword" style="cursor: pointer;">👁</span>
+                            </div>
+
+                            <div class="d-grid mt-3">
+                                <button type="submit" name="save_credentials" class="btn btn-danger">Change Admin Credentials</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const togglePassword = document.querySelector("#togglePassword");
+            const passwordField = document.querySelector("#id_password");
+
+            togglePassword.addEventListener("click", function () {
+                const type = passwordField.getAttribute("type") === "password" ? "text" : "password";
+                passwordField.setAttribute("type", type);
+                this.textContent = type === "password" ? "👁" : "🙈";
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

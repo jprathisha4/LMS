@@ -1,0 +1,285 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>📕 Return Book</title>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+{% comment %} <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script> {% endcomment %}
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<style>
+  .scanner-box {
+    position: relative;
+    width: 100%;
+    height: 250px;
+    overflow: hidden;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background: #f8f9fa;
+  }
+  #reader-student video, #reader-student canvas,
+  #reader-book video, #reader-book canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain;
+  }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+{% include "library/navbar.html" %}
+
+<div class="container my-4">
+  <div class="row">
+    <div class="col-md-6 text-center">
+      <h5>🎓 Student Barcode</h5>
+      <div id="reader-student" class="scanner-box"></div>
+      <span id="student-pill" class="badge badge-success mt-2 hidden">Student Scanned</span>
+    </div>
+    <div class="col-md-6 text-center">
+      <h5>📚 Book QR</h5>
+      <div id="reader-book" class="scanner-box hidden"></div>
+      <span id="book-pill" class="badge badge-info mt-2 hidden">Book Scanned</span>
+    </div>
+  </div>
+
+  <div class="text-center mt-3">
+    <p id="phase-text" class="text-muted">Please scan student barcode, then book QR.</p>
+    <button id="btn-reset" class="btn btn-outline-danger">🔄 Reset Scan</button>
+  </div>
+
+  <form id="returnForm" class="mt-4" method="post" action="{% url 'return_book' %}">
+    {% csrf_token %}
+    <label>Student Name</label>
+    <input type="text" id="username" name="username" class="form-control" readonly required>
+    <label>Roll Number</label>
+    <input type="text" id="roll_number" name="roll_number" class="form-control" readonly required>
+    <input type="hidden" id="book_id" name="book_id">
+    <label>Book Unique ID</label>
+    <input type="text" id="book_unique_id" name="book_unique_id" class="form-control" readonly required>
+    <label>Book Title</label>
+    <input type="text" id="book_title" name="book_title" class="form-control" readonly required>
+    <label>Genre</label>
+    <input type="text" id="genre" name="genre" class="form-control" readonly>
+    <label>Language</label>
+    <input type="text" id="language" name="language" class="form-control" readonly>
+    <label>ISBN</label>
+    <input type="text" id="isbn" name="isbn" class="form-control" readonly required>
+    <label for="return_date">Return Date (optional)</label>
+    <input type="date" name="return_date" id="return_date" class="form-control mb-3">
+    <input type="hidden" name="payment_method" id="payment_method">
+
+    <div class="d-flex justify-content-center mt-4">
+      <button type="submit" id="returnBtn" class="btn btn-primary btn-lg" disabled>✅ Return Book</button>
+    </div>
+  </form>
+</div>
+
+
+<div class="modal fade" id="fineModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">💰 Fine Payment</h5>
+      </div>
+      <div class="modal-body">
+        <p id="fine-text"></p>
+        <div class="text-center">
+          <button class="btn btn-success" onclick="payFine('Cash')">Cash</button>
+          <button class="btn btn-info" onclick="payFine('GPay')">GPay</button>
+          <button class="btn btn-danger" onclick="cancelFine()">❌ Cancel Fine</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 
+
+<script>
+let qrScannerBook = null;
+let studentScanned = false;
+let bookScanned = false;
+
+// === STOP HELPERS ===
+function stopQuagga() {
+  try { Quagga.offDetected(); } catch(e) {}
+  try { Quagga.stop(); } catch(e) {}
+}
+async function stopHtml5Qr() {
+  if (!qrScannerBook) return;
+  try { await qrScannerBook.stop(); } catch(e) {}
+  qrScannerBook = null;
+}
+
+// === STUDENT BARCODE SCANNER ===
+function startStudentScanner() {
+  $("#phase-text").html('Phase 1: Scan the <b>Student Barcode</b>');
+  studentScanned = false;
+
+  Quagga.init({
+    inputStream: { name: "Live", type: "LiveStream", target: document.querySelector('#reader-student'), constraints: { facingMode: "environment" } },
+    decoder: { readers: ["code_128_reader"] }
+  }, err => {
+    if (err) { console.error(err); return; }
+    Quagga.start();
+  });
+
+  Quagga.onDetected(async result => {
+    if (studentScanned) return;
+    studentScanned = true;
+
+    const code = result.codeResult.code;
+    try {
+      const r = await fetch(`/api/scan-lookup/?code=${encodeURIComponent(code)}`);
+      const data = await r.json();
+      if (data.error) { alert(data.error); resetScanners(); return; }
+
+      $("#username").val(data.username || "");
+      $("#roll_number").val(data.roll_number || "");
+      $("#student-pill").removeClass("hidden");
+
+      stopQuagga();
+      setTimeout(startBookScanner, 200);
+    } catch(e) {
+      console.error(e);
+      alert("Error looking up student.");
+      resetScanners();
+    }
+  });
+}
+
+// === BOOK QR SCANNER ===
+{% comment %} function startBookScanner() {
+  $("#phase-text").html('Phase 2: Scan the <b>Book QR</b>');
+  $("#reader-book").removeClass("hidden");
+  bookScanned = false;
+
+  stopHtml5Qr().then(() => {
+    qrScannerBook = new Html5Qrcode("reader-book");
+    qrScannerBook.start(
+      { facingMode: "environment" },
+      { 
+        fps: 30, // faster scanning
+        qrbox: { width: 180, height: 180 }, // smaller scan area
+        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE] // only QR codes
+      },  
+      onBookQrSuccess,
+      err => { console.warn("QR scan error", err); }
+    ).catch(err => {
+      console.error("Html5Qrcode start failed:", err);
+      alert("Camera could not start. Check permissions / HTTPS / single camera use.");
+    });
+  });
+} {% endcomment %}
+
+
+ function startBookScanner() {
+  $("#phase-text").html('Phase 2: Scan the <b>Book QR</b>');
+  $("#reader-book").removeClass("hidden");
+  bookScanned = false;
+
+  stopHtml5Qr().then(() => {
+    qrScannerBook = new Html5Qrcode("reader-book");
+    qrScannerBook.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 250 } },  
+      //{ fps: 30, qrbox: { width: 180, height: 180 }, formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE] },
+      onBookQrSuccess,
+      err => { console.warn("QR scan error", err); }
+    ).catch(err => {
+      console.error("Html5Qrcode start failed:", err);
+      alert("Camera could not start. Check permissions / HTTPS / single camera use.");
+    });
+  });
+} 
+
+function onBookQrSuccess(decodedText) {
+  if (bookScanned) return;
+
+  const parts = decodedText.trim().split('|').map(p => p.trim());
+
+  if (parts.length >= 7 && parts[0] === "BOOK") {
+    $("#book_id").val(parts[1] || "");
+    $("#book_unique_id").val(parts[2] || "");  
+    $("#book_title").val(parts[3] || "");
+    $("#genre").val(parts[4] || "");
+    $("#language").val(parts[5] || "");
+    $("#isbn").val(parts[6] || "");
+
+    bookScanned = true;
+    $("#book-pill").removeClass("hidden");
+
+    stopHtml5Qr().then(afterBothScanned);
+  } else {
+    alert("Invalid QR. Format must be: BOOK|ID|Title|Genre|Lang|ISBN");
+  }
+}
+
+// === AFTER BOTH SCANS ===
+function afterBothScanned() {
+  const roll = $("#roll_number").val();
+  const isbn = $("#isbn").val();
+
+  if (!roll || !isbn) {
+    $("#returnBtn").prop("disabled", true);
+    return;
+  }
+
+  fetch(`/api/check_issue/?roll=${encodeURIComponent(roll)}&isbn=${encodeURIComponent(isbn)}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) {
+        alert(data.error);
+        $("#returnBtn").prop("disabled", true);
+        return;
+      }
+      if (data.fine > 0) {
+        $("#fine-text").text(`${data.username} has a fine amount ${data.display_fine} for the book "${data.book_name}. Please select payment option.`);
+        $("#fineModal").modal("show");
+      } else {
+        $("#returnBtn").prop("disabled", false);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      $("#returnBtn").prop("disabled", true);
+    });
+}
+
+function payFine(method) {
+  $("#fineModal").modal("hide");
+  $("#payment_method").val(method);
+  $("#returnBtn").prop("disabled", false);
+}
+
+function resetScanners() {
+  stopQuagga();
+  stopHtml5Qr();
+  studentScanned = false;
+  bookScanned = false;
+  $("#reader-student").empty();
+  $("#reader-book").empty().addClass("hidden");
+  $("#student-pill, #book-pill").addClass("hidden");
+  $("#returnBtn").prop("disabled", true);
+  startStudentScanner();
+}
+
+$("#btn-reset").on("click", resetScanners);
+$(window).on("load", startStudentScanner);
+
+function cancelFine() {
+  $("#fineModal").modal("hide");
+  $("#payment_method").val("CanceledByAdmin");  // store a flag
+  $("#returnBtn").prop("disabled", false);
+}
+
+
+
+</script>
+</body>
+</html>
+

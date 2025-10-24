@@ -1,0 +1,148 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Edit Book</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw=="
+      crossorigin="anonymous">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+  <style>
+    body {
+      background-color: #f0f2f5;
+      padding-top: 80px;
+    }
+
+    .form-container {
+      background: white;
+      padding: 30px;
+      max-width: 650px;
+      margin: auto;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .form-group label {
+      font-weight: bold;
+    }
+
+    .form-check {
+      margin-bottom: 15px;
+    }
+
+    .form-check-input {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+
+{% include "library/navbar.html" %}
+
+<div class="container my-5">
+  <div class="form-container">
+    <h2>✏️ Edit Book</h2>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="form-group">
+        {{ form.genre.label_tag }} {{ form.genre }}
+      </div>
+
+      <div class="form-group">
+        {{ form.name.label_tag }} {{ form.name }}
+      </div>
+
+      <div class="form-group">
+        {{ form.author.label_tag }} {{ form.author }}
+      </div>
+
+      <div class="form-group">
+        {{ form.isbn.label_tag }} {{ form.isbn }}
+      </div>
+
+      <!-- Language dropdown -->
+      <div class="form-group">
+        {{ form.language.label_tag }} 
+        {{ form.language }}
+      </div>
+
+       <!-- Publisher text input -->
+      <div class="form-group">
+        {{ form.publisher.label_tag }} {{ form.publisher }}
+      </div>
+
+      <div class="form-group">
+        {{ form.description.label_tag }} {{ form.description }}
+      </div>
+
+      <div class="form-group">
+        {{ form.quantity.label_tag }} {{ form.quantity }}
+      </div>
+
+      <div class="form-group">
+        {{ form.image.label_tag }} {{ form.image }}
+      </div>
+
+        <div class="form-group">
+        {{ form.price.label_tag }} {{ form.price }}
+      </div>
+
+
+      <div class="form-group">
+        {{ form.published_date.label_tag }} {{ form.published_date }}
+      </div>
+
+      <!-- Bestseller checkbox -->
+      <div class="form-check">
+        {{ form.bestseller }}
+        <label class="form-check-label" for="{{ form.bestseller.id_for_label }}">
+          {{ form.bestseller.label }}
+        </label>
+      </div>
+
+      <!-- Newly Published checkbox -->
+      <div class="form-check">
+        {{ form.newly_published }}
+        <label class="form-check-label" for="{{ form.newly_published.id_for_label }}">
+          {{ form.newly_published.label }}
+        </label>
+      </div>
+
+      
+
+      <button type="submit" class="btn btn-primary btn-block mt-3">💾 Save</button>
+      <a href="{% url 'view_books' %}" class="btn btn-secondary btn-block">Cancel</a>
+    </form>
+    {% if form.errors %}
+      <div class="alert alert-danger">
+        <strong>Form has errors:</strong>
+        <ul>
+          {% for field in form %}
+            {% for error in field.errors %}
+              <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+</body>
+</html>

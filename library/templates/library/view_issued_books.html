@@ -1,0 +1,486 @@
+ {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Issued Books</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: #0d6efd;
+            color: #fff;
+        }
+
+        .search-box {
+            max-width: 300px;
+            margin-left: auto;
+        }
+
+        .table thead th {
+            background-color: #343a40;
+            color: white;
+        }
+
+        .no-records {
+            color: #6c757d;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+  {% include "library/navbar.html" %}
+<div class="container mt-5">
+    <div class="text-center mb-4">
+    <h2>📚 Issued Books</h2>
+</div>
+
+<form method="get" class="mb-3">
+    <!-- Search Row -->
+    <div class="row g-2 justify-content-center mb-2">
+        <div class="col-md-4 col-sm-8">
+            <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="🔍 Search...">
+            <input type="hidden" name="tab" value="{{ active_tab }}">
+        </div>
+        <div class="col-md-auto col-sm-4 d-flex gap-2">
+            <button class="btn btn-outline-primary " type="submit">Search</button>
+            <a href="{% url 'view_issued_books' %}" class="btn btn-secondary mx-3">Reset</a>
+        </div>
+    </div>
+
+    <!-- Date Row -->
+    <div class="row g-2 justify-content-center">
+        <div class="col-md-3 col-sm-6">
+            <input type="date" name="from_date" value="{{ request.GET.from_date }}" class="form-control">
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <input type="date" name="to_date" value="{{ request.GET.to_date }}" class="form-control">
+        </div>
+        <div class="col-md-auto col-sm-12 d-flex gap-2 mt-2 mt-md-0">
+          <a href="{% url 'export_issued_books_view' %}?tab={{ active_tab }}&q={{ request.GET.q }}&from_date={{ request.GET.from_date }}&to_date={{ request.GET.to_date }}"
+            class="btn btn-success">
+            ⬇️ Export
+          </a>
+        </div>
+    </div>
+</form>
+
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-3">
+        {% for tab in tab_list %}
+            <li class="nav-item">
+                <a class="nav-link {% if active_tab == tab.0 %}active{% endif %}" href="?tab={{ tab.0 }}">
+                    {{ tab.1 }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+
+
+    
+    
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} mt-2">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+
+
+
+    <!-- Table -->
+    {% if page_obj.object_list %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-bordered align-middle">
+                <thead>
+                    <tr>
+                        <th>S.No</th>
+                        <th>Student</th>
+                        <th>Book</th>
+                        <th>Issued Date</th>
+                        <th>Expiry Date</th>
+                         {% if active_tab == 'borrowed' %}
+                          <th>Barcode</th>
+                          <th>QR Code</th>
+                          <th>Fine (₹)</th>
+                          <th>Book Renewal</th>
+                          <th>Missing</th>
+                        {% elif active_tab == 'reserved' %}
+                          <th>Action</th>
+                        {% elif active_tab == 'waiting' %}
+                          <th>Waiting Days</th>
+                        {% elif active_tab == 'canceled' %}
+                          <th>Canceled By</th>
+                        {% elif active_tab == 'fines' %}
+                        <th>Fines (₹)</th>
+                        <th>Payment</th>
+                        {% elif active_tab == 'missing' %}
+                        <th>Fines (₹)</th>
+                        <th>Payment</th>
+                        {% endif %}
+                       
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in page_obj %}
+                        <tr>
+                            <td>{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+                            <td>{{ item.student.username }}</td>
+                            <td>{{ item.book.name }}</td>
+                            <td>{{ item.issued_date }}</td>
+                            <td>{{ item.expiry_date }}</td>
+                            {% if active_tab == 'borrowed' %}
+                           
+                            <td>
+                              {% if item.student.studentextra and item.student.studentextra.barcode %}
+                                
+                                <a href="{{ item.student.studentextra.barcode.url }}" download class="btn btn-sm btn-info mt-1">⬇️ Download</a>
+                              {% else %}
+                                <span class="text-muted">No barcode</span>
+                              {% endif %}
+                            </td>
+
+                            <td>
+                              {% if item.book.qrcode %}
+                               
+                                <a href="{{ item.book.qrcode.url }}" download class="btn btn-success btn-sm mt-1">⬇️ Download</a>
+                              {% else %}
+                                <small>No QR</small>
+                              {% endif %}
+                            </td>
+                      
+                            
+                            <td>{{ item.get_display_fine }}</td>
+
+                             <td>
+                              {% if not item.renewed %}
+                                <button class="btn btn-warning btn-sm"
+                                        onclick="openRenewModal({{ item.id }})">
+                                  🔄 Renew
+                                </button>
+                              {% else %}
+                                <span class="badge bg-secondary">Renewed</span>
+                              {% endif %}
+                            </td>
+
+                            <td>
+                                {% if not item.missing %}
+                                  <button class="btn btn-danger btn-sm missing-btn"
+                                          data-id="{{ item.id }}"
+                                          data-price="{{ item.book.price }}"
+                                          data-fine="{{ item.calculate_fine}}">
+                                    ❌ Missing
+                                  </button>
+                                {% else %}
+                                  <span class="badge bg-dark">Marked Missing</span>
+                                {% endif %}
+                            </td>  
+
+
+                            {% elif active_tab == 'reserved' %}
+                              <td>
+                                <a href="{% url 'cancel_reservation' item.id %}" class="btn btn-sm btn-danger">Cancel</a>
+                              </td>
+                            
+                            {% elif active_tab == 'waiting' %}
+                              <td>{{ item.waiting_days }}</td>
+                            
+                            {% elif active_tab == 'canceled' %}
+                              <td>{{ item.canceled_by|title }}</td>
+                            {% elif active_tab == 'fines' %}
+                              <!-- Always show fine amount (even if canceled) -->
+                              <td>₹{{ item.final_fine }}</td>
+                              <td>
+                                {% if item.payment_method %}
+                                  <span class="badge bg-success">✅ Paid via {{ item.payment_method|title }}</span>
+                                {% elif item.fine_cancel_reason %}
+                                  <span class="badge bg-warning">❌ Canceled ({{ item.fine_cancel_reason }})</span>
+                                {% else %}
+                                  <span class="badge bg-danger">❌ Not Paid</span>
+                                {% endif %}
+                              </td>
+                           
+
+                            {% comment %} {% elif active_tab == 'fines' %}
+                              <!-- Always show fine amount -->
+                              <td>{{ item.get_display_fine }}</td>
+                              <td>
+                                {% if item.payment_method %}
+                                  <span class="badge bg-success">✅ Paid via {{ item.payment_method|title }}</span>
+                                {% elif item.fine_cancel_reason %}
+                                  <span class="badge bg-warning">📌 No Fine ({{ item.fine_cancel_reason }})</span>
+                                {% else %}
+                                  <span class="badge bg-danger">❌ Not Paid</span>
+                                {% endif %}
+                              </td> {% endcomment %}
+
+                            
+                             
+
+                             
+                            {% elif active_tab == 'missing' %}
+                              <td>{{ item.final_fine }}</td>
+                              <td>
+                                {% if item.payment_method %}
+                                  <span class="badge bg-success">Paid via {{ item.payment_method }}</span>
+                                {% else %}
+                                  <span class="badge bg-danger">Not Paid</span>
+                                {% endif %}
+                              </td>
+                            {% endif %} 
+                             
+
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+         <!-- Pagination -->
+<nav>
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?tab={{ active_tab }}&q={{ request.GET.q }}&page={{ page_obj.previous_page_number }}">Previous</a>
+      </li>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      {% if page_obj.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+      {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <li class="page-item"><a class="page-link" href="?tab={{ active_tab }}&q={{ request.GET.q }}&page={{ num }}">{{ num }}</a></li>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?tab={{ active_tab }}&q={{ request.GET.q }}&page={{ page_obj.next_page_number }}">Next</a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>
+
+        {% comment %} <nav>
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?tab={{ active_tab }}&q={{ request.GET.q }}&page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                {% endif %}
+                <li class="page-item active">
+                    <span class="page-link">{{ page_obj.number }}</span>
+                </li>
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?tab={{ active_tab }}&q={{ request.GET.q }}&page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav> {% endcomment %}
+    {% else %}
+        <p class="no-records">No records found for <strong>{{ active_tab|title }}</strong> tab.</p>
+    {% endif %}
+</div>
+
+{% if messages %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      {% for message in messages %}
+        alert("{{ message }}");  // ✅ Replace this with Bootstrap modal trigger
+      {% endfor %}
+    });
+  </script>
+{% endif %}
+
+<!-- 🔔 Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">💰 Pay Fine</h5></div>
+      <div class="modal-body">
+        <p id="fineMessage"></p>
+        <select id="paymentMethod" class="form-control">
+          <option value="gpay">Google Pay</option>
+          <option value="cash">Cash</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-success" id="confirmPaymentBtn">Pay & Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="renewModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Renew Book</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Expiry Date: <span id="renewExpiry"></span></p>
+        <p>Fine: ₹<span id="renewFine"></span></p>
+
+        <label for="payment_method">Payment Method</label>
+        <select id="payment_method" class="form-control">
+          <option value="">-- Select --</option>
+          <option value="Cash">Cash</option>
+          <option value="Card">Card</option>
+          <option value="Online">Online</option>
+           <option value="CanceledByAdmin">❌ Cancel Fine </option>
+        </select>
+        
+      </div>
+      <div class="modal-footer">
+        <input type="hidden" id="renewBookId">
+        <button type="button" class="btn btn-success" onclick="submitRenewForm()">Renew</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Bootstrap 5 Bundle (with Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+let selectedRecordId = null;
+let actionType = null;
+let pendingAmount = 0;
+
+function openRenewModal(issuedBookId) {
+    // Fetch fine + expiry info
+    fetch(`/dashboard/renew/${issuedBookId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                alert(data.message);
+                return;
+            }
+            // Show modal and populate fields
+            document.getElementById("renewBookId").value = issuedBookId;
+            document.getElementById("renewFine").innerText = data.fine;
+            document.getElementById("renewExpiry").innerText = data.expiry_date;
+            $('#renewModal').modal('show');
+        });
+}
+
+function submitRenewForm() {
+    let bookId = document.getElementById("renewBookId").value;
+    let paymentMethod = document.getElementById("payment_method").value;
+
+    fetch(`/dashboard/renew/${bookId}/`, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `payment_method=${paymentMethod}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+        if (data.success) {
+            location.reload(); // reload table to update status
+        }
+    }); 
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  let selectedRecordId = null;
+  let actionType = null;
+  let pendingAmount = 0;
+
+  document.querySelectorAll(".missing-btn").forEach(btn => {
+    btn.addEventListener("click", function() {
+      selectedRecordId = this.dataset.id;
+      const price = parseFloat(this.dataset.price) || 0;
+      const fine  = parseFloat(this.dataset.fine) || 0;
+      actionType = "missing";
+
+      pendingAmount = price + fine;
+      document.getElementById("fineMessage").innerText =
+        `This book is missing. Penalty = ₹${price} + Late Fine ₹${fine} = Total ₹${pendingAmount}.`;
+      new bootstrap.Modal(document.getElementById("paymentModal")).show();
+    });
+  });
+});
+
+
+
+// ✅ Confirm Payment
+document.getElementById("confirmPaymentBtn").addEventListener("click", function() {
+  const method = document.getElementById("paymentMethod").value;
+  fetch("{% url 'mark_payment_received' %}", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
+    body: JSON.stringify({ record_id: selectedRecordId, method: method, amount: pendingAmount, action: actionType })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === "success") {
+      if (actionType === "renew") {
+        window.location.href = `/dashboard/renew/${selectedRecordId}/`;
+      } else {
+        alert("✅ Book marked missing & penalty paid.");
+        location.reload();
+      }
+    } else {
+      alert("❌ " + (data.msg || "Payment failed"));
+    }
+  });
+});
+
+function toggleCancelReason() {
+  let method = document.getElementById("payment_method").value;
+  let reasonBox = document.getElementById("cancelReasonBox");
+  if (method === "CanceledByAdmin") {
+    reasonBox.style.display = "block";
+  } else {
+    reasonBox.style.display = "none";
+    document.getElementById("cancel_reason").value = "";
+  }
+}
+
+
+function cancelFine() {
+  $("#fineModal").modal("hide");
+  $("#payment_method").val("");   // clear payment method
+  $("#returnBtn").prop("disabled", false);
+
+  if (!$("#fine_canceled").length) {
+    $("<input>").attr({
+      type: "hidden",
+      id: "fine_canceled",
+      name: "canceled",
+      value: "true"
+    }).appendTo("#returnForm");
+    $("<input>").attr({
+      type: "hidden",
+      name: "canceled_by",
+      value: "admin"
+    }).appendTo("#returnForm");
+    $("<input>").attr({
+      type: "hidden",
+      name: "fine_cancel_reason",
+      value: "Canceled by Admin"
+    }).appendTo("#returnForm");
+  }
+}
+
+</script>
+
+</body>
+</html> 

@@ -1,0 +1,57 @@
+{% comment %} <!-- student_ordered_books.html -->  changed into student-issued-books.html {% endcomment %}
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Ordered Books</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body {
+      background: #f3f6fb;
+      padding-top: 80px;
+    }
+    .book-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .status-badge {
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+{% include "library/navbar.html" %}
+
+<div class="container">
+  <h2 class="text-center mb-4">📚 My Ordered Books</h2>
+
+  {% for item in issued_books %}
+    <div class="book-card">
+      <h5>{{ item.book.name }} <span class="text-muted">by {{ item.book.author }}</span></h5>
+      <p><strong>Order Date:</strong> {{ item.issued_date|date:"Y-m-d" }}</p>
+      <p><strong>Due Date:</strong> {{ item.expiry_date|date:"Y-m-d" }}</p>
+      <p><strong>Status:</strong> 
+        {% if item.returned %}
+          <span class="badge badge-success status-badge">Returned</span>
+        {% elif item.book.quantity == 0 and not item.returned %}
+          <span class="badge badge-warning status-badge">Waiting</span>
+        {% else %}
+          <span class="badge badge-info status-badge">Borrowed</span>
+        {% endif %}
+      </p>
+      <p><strong>Fine:</strong> ₹{{ item.fine }}</p>
+      {% if item.waiting_position %}
+        <p><strong>Waiting Position:</strong> {{ item.waiting_position }}</p>
+      {% endif %}
+    </div>
+  {% empty %}
+    <p class="text-center text-muted">You have no ordered books yet.</p>
+  {% endfor %}
+</div>
+</body>
+</html>

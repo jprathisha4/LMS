@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+  <meta charset="UTF-8" />
+  <title>👥 View Students</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+  <style>
+    body {
+      background-color: #f7f9fc;
+      padding-top: 80px;
+    }
+    .table-container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-weight: bold;
+    }
+    .table th, .table td {
+      vertical-align: middle;
+    }
+    .btn-sm {
+      min-width: 80px;
+    }
+    @media (max-width: 768px) {
+      .table-responsive {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% include 'library/navbar.html' %}
+  <div class="container">
+    <div class="table-container mt-4">
+      <h2>📘 All Registered Students</h2>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0"></h4>
+         <a href="{% url 'student_signup' %}" class="btn btn-warning mx-2">👩 Add Student</a>
+      </div>
+     
+      <!-- Search -->
+      <form method="get" class="form-inline mb-3 justify-content-center">
+   
+        
+
+        <input type="text" name="q" placeholder="🔍 Search by username or email" value="{{ query }}" class="form-control mr-2" />
+        <button type="submit" class="btn btn-primary mr-2">Search</button>
+        <a href="{% url 'view_students'  %}" class="btn btn-secondary">Reset</a>
+        <a href="{% url 'export_students_excel' %}?q={{ query }}&department={{ selected_department }}" class="btn btn-success ml-2">⬇️ Export to Excel</a>
+
+      </form>
+
+      
+      {% if messages %}
+        <div class="container mt-3">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              {% comment %} <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> {% endcomment %}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+
+      <!-- Students Table -->
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover text-center">
+          <thead class="thead-dark">
+            <tr>
+              <th>S.No</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Roll No</th>
+              <th>Course</th>
+              <th>Department</th>
+              <th>Year</th>
+              <th>Mobile</th>
+              <th>Barcode</th>
+              <th>Query</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for student in students %}
+              <tr>
+                <td>{{ forloop.counter|add:students.start_index|add:"-1" }}</td>
+                <td>{{ student.username }}</td>
+                <td>{{ student.email }}</td>
+                <td>{{ student.studentextra.roll_number }}</td>
+                <td>{{ student.studentextra.course.name }}</td>
+                <td>{{ student.studentextra.department.name }}</td>
+                <td>{{ student.studentextra.year }}</td>
+                <td>{{ student.studentextra.mobile_number }}</td>
+                <td>
+                  {% if student.studentextra.barcode %}
+                    <img src="{{ student.studentextra.barcode.url }}" alt="Barcode" style="width: 100px;"><br>
+                    <a href="{{ student.studentextra.barcode.url }}" download class="btn btn-sm btn-info mt-1">⬇️ Download</a>
+                  {% else %}
+                    <span class="text-muted">No barcode</span>
+                  {% endif %}
+                
+                </td>
+                <td>
+                  {% with queries=student.studentquery_set.all %}
+                    {% if queries.exists %}
+                      <ul class="text-left">
+                        {% for query in queries %}
+                          <li>
+                            <strong>Q:</strong> {{ query.message|truncatechars:50 }}<br>
+                          
+                            {% if query.reply %}
+                              <strong class="text-success">💬 Reply:</strong> {{ query.reply|truncatechars:60 }}
+                            {% else %}
+                              <form method="post" action="{% url 'send_reply' query.id %}">
+                                {% csrf_token %}
+                                <textarea name="reply" rows="2" class="form-control mb-2" placeholder="Write reply..." required></textarea>
+                                <button type="submit" class="btn btn-sm btn-primary">Reply</button>
+                              </form>
+                            {% endif %}
+                          </li>
+                        {% endfor %}
+                      </ul>
+                    {% else %}
+                      <em class="text-muted">No queries</em>
+                    {% endif %}
+                  {% endwith %}
+                </td>
+                <td>
+                  <a href="{% url 'edit_student' student.id %}" class="btn btn-sm btn-warning mb-1">✏️ Edit</a><br>
+                  <a href="{% url 'delete_student' student.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this student?')">🗑️ Delete</a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="8"><em>No students found.</em></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if students.has_other_pages %}
+        <nav aria-label="Student pagination">
+          <ul class="pagination justify-content-center">
+            {% if students.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ students.previous_page_number }}&q={{ query }}">Previous</a>
+              </li>
+            {% endif %}
+            <li class="page-item disabled">
+              <span class="page-link">Page {{ students.number }} of {{ students.paginator.num_pages }}</span>
+            </li>
+            {% if students.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ students.next_page_number }}&q={{ query }}">Next</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
+    </div>
+  </div>
+  <script>
+ function updateDepartments() {
+    const courseId = document.getElementById('id_course').value;
+    const deptSelect = document.getElementById('id_department');
+
+    // Clear old options
+    deptSelect.innerHTML = '';
+
+    fetch(`/get_departments_by_course/${courseId}/`)  // You'll need a Django view for this
+        .then(response => response.json())
+        .then(data => {
+            data.departments.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept.id;
+                option.textContent = dept.name;
+                deptSelect.appendChild(option);
+            });
+        });
+}
+
+  </script>
+</body>
+</html>

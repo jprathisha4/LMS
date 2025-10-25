@@ -1,0 +1,5 @@
+meson
+meson-python
+wheel
+setuptools
+build
